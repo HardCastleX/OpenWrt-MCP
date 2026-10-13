@@ -20,6 +20,7 @@ export async function runSshCommand(
   config: SshConfig,
   command: string,
   timeoutMs = COMMAND_TIMEOUT_MS,
+  stdin?: string,
 ): Promise<CommandResult> {
   return new Promise((resolve, reject) => {
     const connection = new Client();
@@ -75,6 +76,7 @@ export async function runSshCommand(
           truncated,
         }));
         stream.on('error', finish);
+        if (stdin !== undefined) stream.end(stdin);
       });
     });
     connection.on('error', finish);
