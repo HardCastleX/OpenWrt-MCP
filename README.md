@@ -21,7 +21,7 @@ npm.cmd run build
 npm.cmd test
 ```
 
-Set these environment variables on Windows before starting Command Code:
+Set these environment variables on Windows before starting your MCP client:
 
 - `OPENWRT_HOST`: router's private IP, for example `192.168.1.1` or a private WireGuard IP.
 - `OPENWRT_SSH_PORT`: SSH port (optional, defaults to `22`).
@@ -32,35 +32,59 @@ Set these environment variables on Windows before starting Command Code:
 
 Do not disable fingerprint validation. Get the fingerprint with `ssh-keygen -lf <host-public-key> -E sha256` after verifying the host's public key through a trusted channel.
 
-## Connecting one or more routers to Command Code
+## Connecting one or more routers from any MCP client
 
-Register one `user`-scoped `stdio` MCP instance per router. The server name and `OPENWRT_MCP_NAME` form the stable alias visible in Command Code; each instance has its own IP, key, and fingerprint, so the model cannot implicitly switch routers during an operation.
+This is a standard `stdio` MCP server, so it works with any MCP-compatible client (Command Code, Claude Code, Antigravity, and others). Register one server instance **per router**: the server name and `OPENWRT_MCP_NAME` form the stable alias your client sees, and each instance has its own IP, key, and fingerprint, so the model cannot implicitly switch routers during an operation.
 
-```powershell
-cmdc.cmd mcp add --scope user `
-  --env OPENWRT_MCP_NAME=openwrt-home `
-  --env OPENWRT_HOST=192.168.1.1 `
-  --env OPENWRT_SSH_PORT=22 `
-  --env OPENWRT_SSH_USER=root `
-  --env OPENWRT_SSH_KEY_PATH=C:\Users\YOUR_USER\.ssh\openwrt-home `
-  --env OPENWRT_SSH_HOST_FINGERPRINT=SHA256:HOME_FINGERPRINT `
-  openwrt-home -- node C:\Users\YOUR_USER\OpenWrt-MCP\dist\index.js
+The generic shape of the configuration is: launch `node <path>/dist/index.js` with the environment variables above.
+
+```json
+{
+  "mcpServers": {
+    "openwrt-home": {
+      "command": "node",
+      "args": ["C:\\Users\\YOUR_USER\\OpenWrt-MCP\\dist\\index.js"],
+      "env": {
+        "OPENWRT_MCP_NAME": "openwrt-home",
+        "OPENWRT_HOST": "192.168.1.1",
+        "OPENWRT_SSH_PORT": "22",
+        "OPENWRT_SSH_USER": "root",
+        "OPENWRT_SSH_KEY_PATH": "C:\\Users\\YOUR_USER\\.ssh\\openwrt-home",
+        "OPENWRT_SSH_HOST_FINGERPRINT": "SHA256:HOME_FINGERPRINT"
+      }
+    }
+  }
+}
 ```
 
-Add another one with a different alias and independent credentials:
+Add another instance with a different alias and independent credentials:
 
-```powershell
-cmdc.cmd mcp add --scope user `
-  --env OPENWRT_MCP_NAME=openwrt-office `
-  --env OPENWRT_HOST=10.8.0.1 `
-  --env OPENWRT_SSH_PORT=22 `
-  --env OPENWRT_SSH_USER=root `
-  --env OPENWRT_SSH_KEY_PATH=C:\Users\YOUR_USER\.ssh\openwrt-office `
-  --env OPENWRT_SSH_HOST_FINGERPRINT=SHA256:OFFICE_FINGERPRINT `
-  openwrt-office -- node C:\Users\YOUR_USER\OpenWrt-MCP\dist\index.js
+```json
+{
+  "mcpServers": {
+    "openwrt-office": {
+      "command": "node",
+      "args": ["C:\\Users\\YOUR_USER\\OpenWrt-MCP\\dist\\index.js"],
+      "env": {
+        "OPENWRT_MCP_NAME": "openwrt-office",
+        "OPENWRT_HOST": "10.8.0.1",
+        "OPENWRT_SSH_PORT": "22",
+        "OPENWRT_SSH_USER": "root",
+        "OPENWRT_SSH_KEY_PATH": "C:\\Users\\YOUR_USER\\.ssh\\openwrt-office",
+        "OPENWRT_SSH_HOST_FINGERPRINT": "SHA256:OFFICE_FINGERPRINT"
+      }
+    }
+  }
+}
 ```
 
-Use a private LAN/WireGuard IP for each target; do not clone a configuration by only changing the label. Check with `cmdc.cmd mcp list` and `/mcp`. Do not store private keys or passphrases in the repository.
+Where to put this JSON depends on your client — consult its MCP documentation:
+
+- **Command Code**: `cmdc mcp add`, or the same `mcpServers` format via the client's MCP settings.
+- **Claude Code**: `claude mcp add`, or `.mcp.json` in the project.
+- **Antigravity**: the MCP configuration in its settings.
+
+Use a private LAN/WireGuard IP for each target; do not clone a configuration by only changing the label. Do not store private keys or passphrases in the repository.
 
 ## Tools
 
