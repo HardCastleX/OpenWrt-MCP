@@ -1,19 +1,19 @@
 # OpenWrt-MCP
 
-MCP local por `stdio` para administrar routers OpenWrt a través de SSH. El servidor corre en tu PC, se conecta únicamente a una IP privada LAN o WireGuard y no abre puertos en el router.
+Local `stdio` MCP for managing OpenWrt routers over SSH. The server runs on your PC, connects only to a private LAN or WireGuard IP, and does not open any ports on the router.
 
-## Requisitos
+## Requirements
 
-- Node.js 20 o superior.
-- SSH habilitado en OpenWrt y la clave pública del cliente autorizada en el router.
-- IP privada LAN o WireGuard enrutable. Para uso remoto, WireGuard debe anunciar la ruta al router y el firewall debe permitir SSH desde el peer VPN.
-- Fingerprint SHA256 del host SSH del router, verificado por un canal confiable.
+- Node.js 20 or higher.
+- SSH enabled on OpenWrt and the client's public key authorized on the router.
+- A routable private LAN or WireGuard IP. For remote use, WireGuard must advertise the route to the router and the firewall must allow SSH from the VPN peer.
+- The router's SSH host SHA256 fingerprint, verified through a trusted channel.
 
-La configuración rechaza direcciones públicas y nombres DNS. Comprueba el host key SSH en cada conexión. La llave privada nunca se incluye en este repositorio.
+The configuration rejects public addresses and DNS names. It checks the SSH host key on every connection. The private key is never included in this repository.
 
-## Instalación
+## Installation
 
-En la carpeta clonada:
+In the cloned folder:
 
 ```powershell
 npm.cmd install
@@ -21,20 +21,20 @@ npm.cmd run build
 npm.cmd test
 ```
 
-Configura estas variables de entorno en Windows antes de iniciar Command Code:
+Set these environment variables on Windows before starting Command Code:
 
-- `OPENWRT_HOST`: IP privada del router, por ejemplo `192.168.1.1` o una IP privada WireGuard.
-- `OPENWRT_SSH_PORT`: puerto SSH (opcional, predeterminado `22`).
-- `OPENWRT_SSH_USER`: usuario SSH, a menudo `root` en OpenWrt.
-- `OPENWRT_SSH_KEY_PATH`: ruta a la clave privada autorizada en OpenWrt.
-- `OPENWRT_SSH_KEY_PASSPHRASE`: passphrase de la llave, opcional.
-- `OPENWRT_SSH_HOST_FINGERPRINT`: fingerprint pinneado en formato `SHA256:...`.
+- `OPENWRT_HOST`: router's private IP, for example `192.168.1.1` or a private WireGuard IP.
+- `OPENWRT_SSH_PORT`: SSH port (optional, defaults to `22`).
+- `OPENWRT_SSH_USER`: SSH user, often `root` on OpenWrt.
+- `OPENWRT_SSH_KEY_PATH`: path to the private key authorized on OpenWrt.
+- `OPENWRT_SSH_KEY_PASSPHRASE`: key passphrase, optional.
+- `OPENWRT_SSH_HOST_FINGERPRINT`: pinned fingerprint in `SHA256:...` format.
 
-No desactives la validación de huella. Obtén el fingerprint con `ssh-keygen -lf <host-public-key> -E sha256` después de verificar la clave pública del host por un canal confiable.
+Do not disable fingerprint validation. Get the fingerprint with `ssh-keygen -lf <host-public-key> -E sha256` after verifying the host's public key through a trusted channel.
 
-## Conectar uno o varios routers a Command Code
+## Connecting one or more routers to Command Code
 
-Registra una instancia MCP `stdio` de alcance `user` por router. El nombre de servidor y `OPENWRT_MCP_NAME` forman el alias estable visible en Command Code; cada instancia tiene su propia IP, clave y huella, así que el modelo no puede cambiar de router implícitamente durante una operación.
+Register one `user`-scoped `stdio` MCP instance per router. The server name and `OPENWRT_MCP_NAME` form the stable alias visible in Command Code; each instance has its own IP, key, and fingerprint, so the model cannot implicitly switch routers during an operation.
 
 ```powershell
 cmdc.cmd mcp add --scope user `
@@ -42,12 +42,12 @@ cmdc.cmd mcp add --scope user `
   --env OPENWRT_HOST=192.168.1.1 `
   --env OPENWRT_SSH_PORT=22 `
   --env OPENWRT_SSH_USER=root `
-  --env OPENWRT_SSH_KEY_PATH=C:\Users\TU_USUARIO\.ssh\openwrt-home `
-  --env OPENWRT_SSH_HOST_FINGERPRINT=SHA256:HUELLA_HOME `
-  openwrt-home -- node C:\Users\TU_USUARIO\OpenWrt-MCP\dist\index.js
+  --env OPENWRT_SSH_KEY_PATH=C:\Users\YOUR_USER\.ssh\openwrt-home `
+  --env OPENWRT_SSH_HOST_FINGERPRINT=SHA256:HOME_FINGERPRINT `
+  openwrt-home -- node C:\Users\YOUR_USER\OpenWrt-MCP\dist\index.js
 ```
 
-Añade otro con otro alias y credenciales independientes:
+Add another one with a different alias and independent credentials:
 
 ```powershell
 cmdc.cmd mcp add --scope user `
@@ -55,39 +55,39 @@ cmdc.cmd mcp add --scope user `
   --env OPENWRT_HOST=10.8.0.1 `
   --env OPENWRT_SSH_PORT=22 `
   --env OPENWRT_SSH_USER=root `
-  --env OPENWRT_SSH_KEY_PATH=C:\Users\TU_USUARIO\.ssh\openwrt-office `
-  --env OPENWRT_SSH_HOST_FINGERPRINT=SHA256:HUELLA_OFFICE `
-  openwrt-office -- node C:\Users\TU_USUARIO\OpenWrt-MCP\dist\index.js
+  --env OPENWRT_SSH_KEY_PATH=C:\Users\YOUR_USER\.ssh\openwrt-office `
+  --env OPENWRT_SSH_HOST_FINGERPRINT=SHA256:OFFICE_FINGERPRINT `
+  openwrt-office -- node C:\Users\YOUR_USER\OpenWrt-MCP\dist\index.js
 ```
 
-Usa IP privada LAN/WireGuard para cada destino; no clones una configuración cambiando solo la etiqueta. Comprueba con `cmdc.cmd mcp list` y `/mcp`. No guardes claves privadas o passphrases en el repositorio.
+Use a private LAN/WireGuard IP for each target; do not clone a configuration by only changing the label. Check with `cmdc.cmd mcp list` and `/mcp`. Do not store private keys or passphrases in the repository.
 
-## Herramientas
+## Tools
 
-- `get_router_status(section)`: lectura predefinida para `system`, `storage`, `interfaces`, `wireless`, `clients` o `logs`.
-- `get_device_capabilities()`: lectura de versión/target OpenWrt, gestores detectados (`apk`/`opkg`), herramientas disponibles, nombres de interfaces, rutas y cambios UCI pendientes. El hash de configuración se calcula en el router; el MCP no recibe las claves privadas existentes.
-- `plan_wireguard_tunnel(...)`: valida y previsualiza la creación de una interfaz WireGuard nueva. Genera una clave local para el túnel y devuelve su clave pública, resumen y digest de aprobación; la clave privada permanece solo en memoria del proceso MCP y nunca aparece en la respuesta. No cambia el router.
-- `apply_wireguard_tunnel(planId, digest)`: aplica únicamente el plan previo, mientras el mismo proceso MCP siga vivo y el digest/configuración no haya cambiado. Requiere aprobación del cliente MCP. No toca interfaces existentes, firewall, WAN/LAN ni rutas por defecto; detecta gestor de paquetes, pero no instala ni actualiza paquetes.
-- `verify_wireguard_tunnel(interfaceName)`: verifica en una conexión SSH nueva si está configurado/activo y si hay handshake reciente. “Arriba sin handshake” no significa que el peer remoto sea alcanzable.
-- `execute_command(command, confirm)`: herramienta avanzada de shell SSH. La repetición literal de `confirm` **no es una aprobación humana ni una sandbox**; puede cambiar la configuración o interrumpir el acceso.
+- `get_router_status(section)`: predefined read for `system`, `storage`, `interfaces`, `wireless`, `clients`, or `logs`.
+- `get_device_capabilities()`: reads OpenWrt version/target, detected package managers (`apk`/`opkg`), available tools, interface names, routes, and pending UCI changes. The configuration hash is computed on the router; the MCP does not receive existing private keys.
+- `plan_wireguard_tunnel(...)`: validates and previews the creation of a new WireGuard interface. Generates a local key for the tunnel and returns its public key, summary, and approval digest; the private key stays only in the MCP process memory and never appears in the response. Does not change the router.
+- `apply_wireguard_tunnel(planId, digest)`: applies only the previous plan, as long as the same MCP process is still alive and the digest/configuration has not changed. Requires approval from the MCP client. Does not touch existing interfaces, firewall, WAN/LAN, or default routes; it detects the package manager but does not install or update packages.
+- `verify_wireguard_tunnel(interfaceName)`: verifies on a new SSH connection whether it is configured/active and whether there is a recent handshake. "Up without a handshake" does not mean the remote peer is reachable.
+- `execute_command(command, confirm)`: advanced SSH shell tool. Literal repetition of `confirm` **is not human approval nor a sandbox**; it can change the configuration or interrupt access.
 
-### Flujo WireGuard conversacional
+### Conversational WireGuard flow
 
-Pide primero `get_device_capabilities`, luego describe el túnel y solicita `plan_wireguard_tunnel`. Revisa direcciones, AllowedIPs, endpoint y clave pública en la respuesta. Para crear el túnel, pide explícitamente `apply_wireguard_tunnel` con el `planId` y digest del plan aprobado; termina con `verify_wireguard_tunnel` desde una conexión nueva. No se crea ni aplica ningún túnel al iniciar el MCP.
+First ask for `get_device_capabilities`, then describe the tunnel and request `plan_wireguard_tunnel`. Review the addresses, AllowedIPs, endpoint, and public key in the response. To create the tunnel, explicitly request `apply_wireguard_tunnel` with the `planId` and digest of the approved plan; finish with `verify_wireguard_tunnel` from a new connection. No tunnel is created or applied when the MCP starts.
 
-El túnel está aislado deliberadamente: `0.0.0.0/0` y `::/0`, AllowedIPs que se solapen con rutas existentes, nombres ya utilizados y cambios UCI pendientes son rechazados. Tampoco se modifica el firewall, así que este primer corte crea la interfaz/peer local pero no garantiza conectividad entrante a través de zonas WAN; la exposición de endpoint debe configurarse por separado con una operación específica y revisada.
+The tunnel is deliberately isolated: `0.0.0.0/0` and `::/0`, AllowedIPs that overlap existing routes, already-used names, and pending UCI changes are rejected. The firewall is not modified either, so this first cut creates the local interface/peer but does not guarantee inbound connectivity through WAN zones; endpoint exposure must be configured separately with a specific, reviewed operation.
 
-No hay rollback general ni garantía de recuperación si el sistema queda inaccesible. La previsualización, comprobación de hash y verificación independiente reducen errores, pero no pueden demostrar que el peer remoto funcionará. Si se pierde la ruta SSH, la recuperación puede requerir acceso LAN/local. No ejecutes sesiones con `--yolo`; las herramientas mutables deben tener aprobación en el cliente MCP. Timeout por llamada: 30 segundos; salida combinada máxima: 32 KiB.
+There is no general rollback or recovery guarantee if the system becomes unreachable. The preview, hash check, and independent verification reduce errors, but they cannot prove the remote peer will work. If the SSH route is lost, recovery may require LAN/local access. Do not run sessions with `--yolo`; mutable tools must have approval in the MCP client. Per-call timeout: 30 seconds; maximum combined output: 32 KiB.
 
-La clave privada temporal del plan vive en memoria del MCP durante un máximo de 10 minutos. Si se reinicia el servidor entre `plan` y `apply`, crea un plan nuevo y distribuye la nueva clave pública al peer remoto.
+The plan's temporary private key lives in the MCP's memory for a maximum of 10 minutes. If the server restarts between `plan` and `apply`, create a new plan and distribute the new public key to the remote peer.
 
-## Estado experimental y pendientes de la beta
+## Experimental status and pending items
 
-La configuración WireGuard es experimental. Se han probado detección de capacidades, validación, generación de claves, la previsualización local y el parser de shell; `apply_wireguard_tunnel` **todavía no se ha validado creando una interfaz en un router de laboratorio**. No lo uses en el único router que te da acceso remoto hasta completar esa prueba.
+WireGuard configuration is experimental. Capability detection, validation, key generation, local preview, and the shell parser have been tested. `apply_wireguard_tunnel` has been exercised on a laboratory router (creating an interface, completing a remote handshake, and removing it), but it **has not yet been validated in a fully remote, real-world environment**. Do not rely on it as your only access path until that validation is complete.
 
-Un plan con `peers: []` sirve solo para validar la creación de una interfaz local aislada; no establece handshake. Para verificar conectividad real hace falta un peer remoto configurado con la clave pública generada. Pendiente antes de una versión estable: probar aplicación/activación y retirada en un OpenWrt de laboratorio, verificar el formato real de cambios UCI y completar una conexión con handshake remoto, además de rotar la clave `wg0` que se expuso accidentalmente durante el diagnóstico previo.
+A plan with `peers: []` only serves to validate the creation of an isolated local interface; it does not establish a handshake. Verifying real connectivity requires a remote peer configured with the generated public key. Pending items: validating in a real remote environment, verifying the real format of UCI changes across releases, and rotating the `wg0` key that was accidentally exposed during the previous diagnosis.
 
-## Desarrollo y pruebas
+## Development and testing
 
 ```powershell
 npm.cmd run typecheck
@@ -95,4 +95,4 @@ npm.cmd test
 npm.cmd run build
 ```
 
-Los tests cubren validación de IP privada, confirmación de comandos y pinning de fingerprint. La conexión manual al router requiere configurar las variables anteriores.
+The tests cover private IP validation, command confirmation, and fingerprint pinning. The manual connection to the router requires configuring the variables above.
