@@ -69,7 +69,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           addresses: { type: 'array', minItems: 1, maxItems: 8, items: { type: 'string' } },
           listenPort: { type: 'integer', minimum: 1, maximum: 65535 },
           routeAllowedIps: { type: 'boolean', default: false },
-          peers: { type: 'array', minItems: 1, maxItems: 8, items: {
+          peers: { type: 'array', maxItems: 8, items: {
             type: 'object', additionalProperties: false,
             properties: {
               publicKey: { type: 'string' },

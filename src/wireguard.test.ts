@@ -94,6 +94,16 @@ test('normalizes OpenWrt route output including unreachable and default-from IPv
   assert.doesNotThrow(() => validateWireGuardPlan(input, capabilities));
 });
 
+test('plans a local interface with no peers and rejects local route installation', () => {
+  assert.throws(() => wireGuardInputSchema.parse({ interfaceName: 'wg_local', addresses: ['10.90.0.1/24'], peers: [], routeAllowedIps: true }), /Local-only tunnels cannot install routes/);
+  const localInput = wireGuardInputSchema.parse({ interfaceName: 'wg_local', addresses: ['10.90.0.1/24'], peers: [] });
+  const { plan, summary } = makeWireGuardPlan(localInput, caps, 2_000);
+  const batch = buildUciBatch(plan);
+  assert.deepEqual(summary.peers, []);
+  assert.equal(batch.includes('wireguard_wg_local'), false);
+  assert.equal(batch.includes("set network.wg_local.proto='wireguard'"), true);
+});
+
 test('rejects existing interfaces, default routes, and existing route overlaps', () => {
   assert.throws(() => validateWireGuardPlan({ ...input, interfaceName: 'wg0' }, caps), /already exists/);
   assert.throws(() => validateWireGuardPlan({ ...input, peers: [{ ...input.peers[0]!, allowedIps: ['0.0.0.0/0'] }], routeAllowedIps: true }, caps), /Default routes/);

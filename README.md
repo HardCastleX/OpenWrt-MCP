@@ -81,6 +81,12 @@ No hay rollback general ni garantía de recuperación si el sistema queda inacce
 
 La clave privada temporal del plan vive en memoria del MCP durante un máximo de 10 minutos. Si se reinicia el servidor entre `plan` y `apply`, crea un plan nuevo y distribuye la nueva clave pública al peer remoto.
 
+## Estado experimental y pendientes de la beta
+
+La configuración WireGuard es experimental. Se han probado detección de capacidades, validación, generación de claves, la previsualización local y el parser de shell; `apply_wireguard_tunnel` **todavía no se ha validado creando una interfaz en un router de laboratorio**. No lo uses en el único router que te da acceso remoto hasta completar esa prueba.
+
+Un plan con `peers: []` sirve solo para validar la creación de una interfaz local aislada; no establece handshake. Para verificar conectividad real hace falta un peer remoto configurado con la clave pública generada. Pendiente antes de una versión estable: probar aplicación/activación y retirada en un OpenWrt de laboratorio, verificar el formato real de cambios UCI y completar una conexión con handshake remoto, además de rotar la clave `wg0` que se expuso accidentalmente durante el diagnóstico previo.
+
 ## Desarrollo y pruebas
 
 ```powershell
