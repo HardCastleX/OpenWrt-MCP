@@ -81,7 +81,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
             required: ['publicKey', 'allowedIps'],
           } },
         },
-        required: ['interfaceName', 'addresses', 'peers'],
+        required: ['interfaceName', 'addresses'],
         additionalProperties: false,
       },
     },

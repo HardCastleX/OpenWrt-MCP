@@ -25,7 +25,7 @@ export const wireGuardInputSchema = z.object({
     endpointHost: endpointHostSchema.optional(),
     endpointPort: z.number().int().min(1).max(65535).optional(),
     persistentKeepalive: z.number().int().min(0).max(65535).optional(),
-  }).strict().refine((peer) => Boolean(peer.endpointHost) === Boolean(peer.endpointPort), 'endpointHost and endpointPort must be provided together.')).max(8),
+  }).strict().refine((peer) => Boolean(peer.endpointHost) === Boolean(peer.endpointPort), 'endpointHost and endpointPort must be provided together.')).max(8).default([]),
 }).strict().refine((input) => new Set(input.peers.map((peer) => peer.publicKey)).size === input.peers.length, 'Peer public keys must be unique.')
   .refine((input) => input.peers.length > 0 || input.routeAllowedIps === false, 'Local-only tunnels cannot install routes.');
 

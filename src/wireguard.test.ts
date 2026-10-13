@@ -100,6 +100,8 @@ test('plans a local interface with no peers and rejects local route installation
   const { plan, summary } = makeWireGuardPlan(localInput, caps, 2_000);
   const batch = buildUciBatch(plan);
   assert.deepEqual(summary.peers, []);
+  const omittedPeers = wireGuardInputSchema.parse({ interfaceName: 'wg_local', addresses: ['10.90.0.1/24'] });
+  assert.deepEqual(omittedPeers.peers, []);
   assert.equal(batch.includes('wireguard_wg_local'), false);
   assert.equal(batch.includes("set network.wg_local.proto='wireguard'"), true);
 });
