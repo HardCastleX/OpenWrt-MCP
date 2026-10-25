@@ -254,6 +254,7 @@ export function parseTailscaleStatus(stdout: string, truncated = false): Tailsca
     ? Object.values(peers).map(asRecord).filter((peer): peer is Record<string, unknown> => peer !== undefined)
     : [];
   const tailscaleIps = stringArray(self?.TailscaleIPs ?? status?.TailscaleIPs);
+  const advertisedRoutes = stringArray(prefs?.AdvertiseRoutes);
   const interfaceAddress = interfaceRaw.split(/\r?\n/)
     .map((line) => line.match(/\binet\s+(\d{1,3}(?:\.\d{1,3}){3})(?:\/\d{1,2})?/) ?.[1])
     .find((address): address is string => Boolean(address && ipaddr.isValid(address)));
@@ -269,8 +270,8 @@ export function parseTailscaleStatus(stdout: string, truncated = false): Tailsca
     dnsName: optionalString(self?.DNSName),
     tailscaleIps,
     magicDnsSuffix: optionalString(status?.MagicDNSSuffix),
-    advertisedRoutes: stringArray(prefs?.AdvertiseRoutes),
-    advertiseExitNode: prefs?.AdvertiseExitNode === true,
+    advertisedRoutes,
+    advertiseExitNode: advertisedRoutes.some(isDefaultRoute),
     usingExitNode: stringArray(exitNodeStatus?.TailscaleIPs)[0] ?? optionalString(prefs?.ExitNodeIP),
     acceptRoutes: prefs?.RouteAll === true,
     acceptDns: prefs?.CorpDNS !== false,

@@ -17,7 +17,7 @@ const sections = {
   storage: 'df -h',
   interfaces: 'ubus call network.interface dump',
   wireless: 'iwinfo',
-  clients: 'for iface in $(ubus list "hostapd.*"); do printf "\\n%s\\n" "$iface"; ubus call "$iface" get_clients; done',
+  clients: "for dev in $(iwinfo 2>/dev/null | awk '/^[^[:space:]]/{print $1}'); do printf '\\n%s\\n' \"$dev\"; iwinfo \"$dev\" assoclist 2>/dev/null; done",
   logs: 'logread -l 100',
 } as const;
 

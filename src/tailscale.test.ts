@@ -49,7 +49,6 @@ const statusJson = {
 
 const prefsJson = {
   AdvertiseRoutes: ['192.168.10.0/24'],
-  AdvertiseExitNode: false,
   RouteAll: true,
   CorpDNS: false,
   ExitNodeIP: '100.64.0.9',
@@ -96,6 +95,21 @@ test('parses installed, running node state without leaking secrets', () => {
   assert.equal(status.onlinePeerCount, 1);
   assert.equal(status.interfaceAddress, '100.64.1.2');
   assert.equal(status.partial, false);
+});
+
+test('infers exit-node advertisement from default routes in prefs', () => {
+  const withExitNode = parseTailscaleStatus(fixture.replace(
+    JSON.stringify(prefsJson),
+    JSON.stringify({ ...prefsJson, AdvertiseRoutes: ['0.0.0.0/0', '::/0', '192.168.10.0/24'] }),
+  ));
+  assert.equal(withExitNode.advertiseExitNode, true);
+  assert.deepEqual(withExitNode.advertisedRoutes, ['0.0.0.0/0', '::/0', '192.168.10.0/24']);
+
+  const ipv4Only = parseTailscaleStatus(fixture.replace(
+    JSON.stringify(prefsJson),
+    JSON.stringify({ ...prefsJson, AdvertiseRoutes: ['0.0.0.0/0'] }),
+  ));
+  assert.equal(ipv4Only.advertiseExitNode, true);
 });
 
 test('reports a missing or broken Tailscale installation without throwing', () => {
