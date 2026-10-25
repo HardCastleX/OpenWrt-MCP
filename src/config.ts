@@ -14,11 +14,16 @@ export function isPrivateAddress(host: string): boolean {
   if (!ipaddr.isValid(host)) return false;
 
   const address = ipaddr.parse(host);
-  if (address.kind() === 'ipv4') return address.range() === 'private';
+  if (address.kind() === 'ipv4') {
+    const range = address.range();
+    return range === 'private' || range === 'carrierGradeNat';
+  }
   if (address.range() === 'uniqueLocal') return true;
   if (ipaddr.IPv6.isIPv6(host)) {
     const ipv6 = ipaddr.IPv6.parse(host);
-    return ipv6.isIPv4MappedAddress() && ipv6.toIPv4Address().range() === 'private';
+    if (!ipv6.isIPv4MappedAddress()) return false;
+    const range = ipv6.toIPv4Address().range();
+    return range === 'private' || range === 'carrierGradeNat';
   }
   return false;
 }
@@ -32,7 +37,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): SshConfig {
   const port = Number(portValue);
 
   if (!host || !isPrivateAddress(host)) {
-    throw new Error('OPENWRT_HOST must be a private LAN or WireGuard IP address.');
+    throw new Error('OPENWRT_HOST must be a private LAN or Tailscale (CGNAT) IP address.');
   }
   if (!username) throw new Error('OPENWRT_SSH_USER is required.');
   if (!keyPath) throw new Error('OPENWRT_SSH_KEY_PATH is required.');

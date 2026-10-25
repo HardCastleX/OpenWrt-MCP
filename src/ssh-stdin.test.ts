@@ -12,7 +12,7 @@ test('sends config batch through SSH stdin instead of the remote command string'
   const config: SshConfig = {
     host: '192.168.10.1', port: 22, username: 'root', privateKey: Buffer.from('fake key'), hostFingerprint,
   };
-  const expectedInput = "set network.wgtest.proto='wireguard'\ncommit network\n";
+  const expectedInput = "test-auth-key-value\n";
   let issuedCommand = '';
   let streamedInput = '';
   const originalConnect = Client.prototype.connect;
@@ -35,11 +35,11 @@ test('sends config batch through SSH stdin instead of the remote command string'
   }) as typeof Client.prototype.exec;
   Client.prototype.end = function () { return this; };
   try {
-    const result = await runSshCommand(config, 'uci batch', 1000, expectedInput);
+    const result = await runSshCommand(config, 'sh -s', 1000, expectedInput);
     assert.equal(result.exitCode, 0);
-    assert.equal(issuedCommand, 'uci batch');
+    assert.equal(issuedCommand, 'sh -s');
     assert.equal(streamedInput, expectedInput);
-    assert.equal(issuedCommand.includes('commit network'), false);
+    assert.equal(issuedCommand.includes(expectedInput.trim()), false);
   } finally {
     Client.prototype.connect = originalConnect;
     Client.prototype.exec = originalExec;

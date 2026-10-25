@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { isPrivateAddress, loadConfig } from './config.js';
 
-test('accepts private LAN and WireGuard addresses', () => {
-  for (const host of ['10.0.0.1', '172.20.1.1', '192.168.1.1', 'fd12:3456::1', '::ffff:192.168.1.1']) {
+test('accepts private LAN and Tailscale (CGNAT) addresses', () => {
+  for (const host of ['10.0.0.1', '172.20.1.1', '192.168.1.1', '100.126.77.71', 'fd12:3456::1', '::ffff:192.168.1.1']) {
     assert.equal(isPrivateAddress(host), true, host);
   }
 });
